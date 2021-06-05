@@ -1,0 +1,2 @@
+rootProject.name = "ArmazenamentoCompartilhado"
+include ':app'

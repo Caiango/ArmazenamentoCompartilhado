@@ -29,7 +29,7 @@ class DataSource(val context: Context) {
         }
     }
 
-    private fun getImages(): List<MyImage> {
+    fun getImages(): List<MyImage> {
         val list = mutableListOf<MyImage>()
         val projection = arrayOf(
             MediaStore.Images.ImageColumns._ID,

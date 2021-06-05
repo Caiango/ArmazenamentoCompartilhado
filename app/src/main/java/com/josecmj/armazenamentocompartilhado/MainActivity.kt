@@ -99,6 +99,8 @@ class MainActivity : AppCompatActivity() {
             val intentSender = recoverSecException.userAction.actionIntent.intentSender
             startIntentSenderForResult(intentSender, DELETE_PERMISSION_REQUEST, null, 0, 0, 0, null)
         }
+
+        fileListViewModel.filesLiveData.postValue(fileListViewModel.dataSource.getImages())
     }
 
     override fun onRequestPermissionsResult(

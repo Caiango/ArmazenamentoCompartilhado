@@ -1,24 +1,24 @@
 package com.josecmj.armazenamentocompartilhado
 
 import android.Manifest
+import android.app.RecoverableSecurityException
+import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.Image
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.viewModels
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
-import android.view.View
-import android.widget.GridLayout
-import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.josecmj.armazenamentocompartilhado.databinding.ActivityMainBinding
-import java.io.File
 
 private const val READ_EXTERNAL_STORAGE_REQUEST = 1
 
@@ -27,7 +27,7 @@ private const val DELETE_PERMISSION_REQUEST = 2
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val imageAdapter : ImageAdapter = ImageAdapter()
+    private val imageAdapter : ImageAdapter = ImageAdapter(this::delete)
 
     private val fileListViewModel by viewModels<ImageViewModel>{
         ImageViewModelFactory(this)
@@ -84,8 +84,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun delete(){
-
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun delete(uri: Uri){
+        try {
+            contentResolver.delete(
+                uri,
+                "${MediaStore.Images.Media._ID} = ?",
+                arrayOf(ContentUris.parseId(uri).toString())
+            )
+        } catch (securityException: SecurityException) {
+            val recoverSecException =
+                securityException as? RecoverableSecurityException ?: throw
+                securityException
+            val intentSender = recoverSecException.userAction.actionIntent.intentSender
+            startIntentSenderForResult(intentSender, DELETE_PERMISSION_REQUEST, null, 0, 0, 0, null)
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -93,6 +106,7 @@ class MainActivity : AppCompatActivity() {
         permissions: Array<String>,
         grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             READ_EXTERNAL_STORAGE_REQUEST -> {
                 // If request is cancelled, the result arrays are empty.
